@@ -162,7 +162,7 @@ function searchBarDBQuery(str) { // search bar
 }
 
 function updateDatabaseQueryTable(stPos = 0, dItems, scrollBarEvent = false) { // starting position, total displayed items
-	var ms, x, y, mCross, mSame, curCiph
+	var ms, x, y, mCross, mSame, curCiph, curCiphCol
 
 	// stPos - starting position
 	// dbPageItems - number of phrases in one section
@@ -216,8 +216,9 @@ function updateDatabaseQueryTable(stPos = 0, dItems, scrollBarEvent = false) { /
 			ms += '</td>'
 			for (z = 0; z < gemArrCiph.length; z++) { // use compact layout
 				curCiph = cipherList[ gemArrCiph[z] ]
-				// ms += '<td class="hCVQ"><span class="hCV2" style="color: hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1);">'+curCiph.cipherName.replace(/ /g, "<br>")+'</span></td>' // color of cipher displayed in the table
-				ms += '<td class="hCVQ" style="height: '+calcCipherNameHeightPx(curCiph.cipherName)+'px;"><span class="hCV2" style="color: hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1);">'
+				curCiphCol = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1)' : ''
+				// ms += '<td class="hCVQ"><span class="hCV2" style="color: '+curCiphCol+'">'+curCiph.cipherName.replace(/ /g, "<br>")+'</span></td>' // color of cipher displayed in the table
+				ms += '<td class="hCVQ" style="height: '+calcCipherNameHeightPx(curCiph.cipherName)+'px;"><span class="hCV2" style="color: '+curCiphCol+'">'
 				ms += curCiph.cipherName+'</span></td>' // color of cipher displayed in the table
 			}
 			ms += "</tr>"
@@ -240,6 +241,7 @@ function updateDatabaseQueryTable(stPos = 0, dItems, scrollBarEvent = false) { /
 		valPos = 2 // reset position for new phrase
 		for (y = 0; y < gemArrCiph.length; y++) { // gemArrCiph contains indices of ciphers used for query
 			curCiph = cipherList[ gemArrCiph[y] ]
+			curCiphCol = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1)' : ''
 
 			if (liveDatabaseMode == true) {
 				gemVal = (encodingMenuOpened) ? curCiph.calcGematria(queryResult[x]) : curCiph.calcGematria(queryResult[x][1]) // recalculate displayed value
@@ -255,9 +257,12 @@ function updateDatabaseQueryTable(stPos = 0, dItems, scrollBarEvent = false) { /
 
 			ms += '<td class="tCQ">' // use instead of .tC to disable highlighting/blinking/hide effects on click
 
-			if (mSame) { ms += '<span style="color: hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1);"' }
+			if (mSame) { ms += '<span style="color: '+curCiphCol+'"' }
 			else if (!mSame && mCross) { ms += '<span style="color: hsl(0deg 0% 50% / 1);"' }
-			else if (!mSame && !mCross) { ms += '<span style="color: hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+');"' }
+			else if (!mSame && !mCross) {
+				curCiphCol = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+')' : 'hsl(0 0% 50% / '+alphaHlt+')'
+				ms += '<span style="color: '+curCiphCol+'"'
+			}
 			ms += ' class="gVQ"> '+gemVal+' </span></td>' // number properties are available
 		}
 		ms += '</tr>'

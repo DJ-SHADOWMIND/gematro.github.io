@@ -54,8 +54,12 @@ function restoreCalcSettingsLocalStorage(silentMode = false) {
 	return
 }
 
-function clearCalcSettingsLocalStorage(clearAll = false) {
-	if (clearAll) window.localStorage.clear() // clear all localStorage
+function clearCalcSettingsLocalStorage() {
+	if (window.localStorage.getItem('userCalcSettings') === null) {
+		window.localStorage.clear() // clear all localStorage
+		displayCalcNotification("localStorage was cleared!", 1500)
+		return
+	}
 	window.localStorage.removeItem('userCalcSettings');
 	displayCalcNotification("Settings were cleared!", 1500)
 	return

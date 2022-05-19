@@ -13,6 +13,8 @@ var cCat = []; // list of all available cipher categories
 var colorMenuColumns = ($(window).width() < 1600) ? 2 : 4 // number of columns inside Color Menu
 var encodingMenuColumns = 4 // number of columns inside Encoding menu
 var enabledCiphColumns = 4 // number of columns for enabled ciphers table (for phrase)
+var optForceTwoColumnLayout = false // force 2 cipher columns
+var optColoredCiphers = true // use colored ciphers
 
 var colorControlsMenuOpened = false // color controls menu state
 var editCiphersMenuOpened = false // edit ciphers menu state
@@ -111,6 +113,8 @@ var calcOptionsArr = [ // used to export/import settings
 	"'optPhraseLimit'+' = '+optPhraseLimit",
 	"'dbPageItems'+' = '+dbPageItems",
 	"'dbScrollItems'+' = '+dbScrollItems",
+	"'optForceTwoColumnLayout'+' = '+optForceTwoColumnLayout",
+	"'optColoredCiphers'+' = '+optColoredCiphers",
 	"'optGemSubstitutionMode'+' = '+optGemSubstitutionMode",
 	"'optGemMultCharPos'+' = '+optGemMultCharPos",
 	"'optGemMultCharPosReverse'+' = '+optGemMultCharPosReverse",
@@ -133,7 +137,9 @@ function initCalc(defSet = false) { // run after page has finished loading
 	saveCalcSettingsLocalStorage(true) // save default settings
 }
 
+var updLinkOnce = true
 function configureCalcInterface(initRun = false) { // switch interface layout (desktop or mobile devices)
+	if (updLinkOnce) { displayCalcNotification("Please update bookmark to https://gematro.com", 8000); updLinkOnce = false; }
 	if (optMatrixCodeRain && !initRun) { // update code rain
 		clearInterval(code_rain) // reset previous instance
 		document.getElementById("canv").style.display = "none"
@@ -157,6 +163,11 @@ function configureCalcInterface(initRun = false) { // switch interface layout (d
 		chLimit = 30 // character limit, used to switch to a long breakdown style
 		maxRowWidth = 36 // one row character limit (long breakdown)
 		$('#queryDBbtn').val('Query') // change Query button label
+	}
+	if (optForceTwoColumnLayout && $(window).width() > compactViewportWidth) { // override layout for desktop
+		encodingMenuColumns = 2
+		colorMenuColumns = 2
+		enabledCiphColumns = 2
 	}
 }
 
@@ -623,7 +634,7 @@ function createFeaturesMenu() {
 
 	o += '<div class="dropdown">'
 	o += '<button class="dropbtn">Features</button>'
-	o += '<div class="dropdown-content" style="width: 216px">'
+	o += '<div class="dropdown-content" style="width: 216px; left: -90px;">'
 
 	o += create_GemCalc() // Gematria Calculation method
 
@@ -712,7 +723,7 @@ function toggleColorControlsMenu(redraw = false) { // display control menu to ad
 		// global color controls
 		o += '<center>'
 		o += '<table class="globColCtrlTable">'
-		o += '<tr><td class="colLabel">All Ciphers Color: </td>'
+		o += '<tr><td class="colLabel">All Ciphers Color:</td>'
 		o += '<td class="colLabelSmall">Hue</td>'
 		o += '<td><input type="number" step="2" min="-360" max="360" value="'+globColors.H+'" class="colSlider2" id="globalSliderHue" oninput="changeCipherColors(&quot;globalSliderHue&quot;, &quot;Hue&quot;)"></td>'
 		o += '<td class="colLabelSmall">Saturation</td>'
@@ -747,12 +758,17 @@ function toggleColorControlsMenu(redraw = false) { // display control menu to ad
 		o += '<td><input type="number" step="0.01" min="0" max="1.0" value="'+coderainSat+'" class="colSlider2" id="coderainSatSlider" oninput="updateCoderainSat()"></td>'
 		o += '<td class="colLabelSmall">Lightness</td>'
 		o += '<td><input type="number" step="0.01" min="0" max="1.0" value="'+coderainLit+'" class="colSlider2" id="coderainLitSlider" oninput="updateCoderainLit()"></td>'
-		o += '</tr>'
-		// reset colors
-		o += '<tr><td colspan=1></td>'
-		o += '<td colspan=4><input id="resetColorsButton" class="intBtn" type="button" value="Reset Colors" style="margin-top: 1.5em;" onclick="resetColorControls()"></td>'
-		o += '</tr>'
-		o += '</table>'
+		o += '</tr></table>'
+		// checkboxes, reset button
+		chkTPstate = (optForceTwoColumnLayout) ? " checked" : ""
+		chkCCstate = (optColoredCiphers) ? " checked" : ""
+		o += '<div style="margin: 1em"></div>'
+		o += '<table class="globColCtrlTable">'
+		o += '<tr>'
+		o += '<td><label class="chkLabel colLabelSmallEnc">Two Columns<input type="checkbox" id="chkbox_forceTwoColumns" onclick="forceTwoColumnLayout()"'+chkTPstate+'><span class="custChkBox"></span></label></td>'
+		o += '<td><label class="chkLabel colLabelSmallEnc">Colored Ciphers<input type="checkbox" id="chkbox_colCiphers"'+chkCCstate+' onclick="toggleColoredCiphers()"><span class="custChkBox"></span></label></td>'
+		o += '<td><input id="resetColorsButton" class="intBtn" style="width: auto;" type="button" value="Reset Colors" onclick="resetColorControls()"></td>'
+		o += '</tr></table>'
 		o += '</center>'
 
 		o += '</div>' // colorControlsBG
@@ -763,6 +779,17 @@ function toggleColorControlsMenu(redraw = false) { // display control menu to ad
 		document.getElementById("colorControlsMenuArea").innerHTML = "" // clear
 		colorControlsMenuOpened = false
 	}
+}
+
+function forceTwoColumnLayout() {
+	optForceTwoColumnLayout = !optForceTwoColumnLayout
+	configureCalcInterface()
+	updateTables()
+}
+
+function toggleColoredCiphers() {
+	optColoredCiphers = !optColoredCiphers
+	updateTables()
 }
 
 function updateInterfaceColor(firstrun = false) { // change interface color
@@ -1166,6 +1193,8 @@ function updateEnabledCipherTable() { // draws a table with phrase gematria for 
 	
 	prevCiphIndex = -1 // reset cipher selection
 	updateEnabledCipherCount() // get number of enabled ciphers
+
+	if (enabledCiphCount == 0) return // do not draw the table
 	
 	phr = sVal() // grab current phrase
 	// if (enabledCiphCount == 0 || phr == "") return // no enabled ciphers, empty phraseBox
@@ -1197,7 +1226,7 @@ function updateEnabledCipherTable() { // draws a table with phrase gematria for 
 				new_row_opened = true
 			}
 			if (ciph_in_row < result_columns) { // until number of ciphers in row equals number of colums
-				cur_col = 'color: hsl('+cipherList[i].H+' '+cipherList[i].S+'% '+cipherList[i].L+'% / 1);'
+				cur_col = (optColoredCiphers) ? 'color: hsl('+cipherList[i].H+' '+cipherList[i].S+'% '+cipherList[i].L+'% / 1);' : ''
 				if (odd_col) { // odd column, "cipher name - value"
 					o += '<td class="phraseGemCiphName" style="'+cur_col+'">'+cipherList[i].cipherName+'</td>'
 					// o += '<td class="phraseGemValueOdd" style="'+cur_col+'">'+cipherList[i].calcGematria(phr)+'</td>'
@@ -1354,7 +1383,7 @@ function addPhraseToHistoryUnshift(phr, upd) { // add new phrase to the beginnin
 }
 
 function updateHistoryTable(hltBoolArr) {
-	var ms, i, x, y, z, curCiph, gemVal
+	var ms, i, x, y, z, curCiph, curCiphCol, gemVal
 	var ciphCount = 0 // count enabled ciphers (for hltBoolArr)
 	histTable = document.getElementById("HistoryTableArea")
 	
@@ -1377,14 +1406,15 @@ function updateHistoryTable(hltBoolArr) {
 	var tmpComment = ""; var commentMatch;
 	for (x = 0; x < sHistory.length; x++) {
 
-		if (x % 25 == 0) {
+		if (x % 25 == 0 && enabledCiphCount !== 0) { // show header after each 25 phrases
 			ms += '<tr class="cH"><td class="mP"></td>'
 			for (z = 0; z < cipherList.length; z++) {
 				if (cipherList[z].enabled) {
+					curCiphCol = (optColoredCiphers) ? 'color: hsl('+cipherList[z].H+' '+cipherList[z].S+'% '+cipherList[z].L+'% / 1);' : ''
 					if (compactHistoryTable) {
-						ms += '<td class="hCV" style="height: '+calcCipherNameHeightPx(cipherList[z].cipherName)+'px;"><span class="hCV2" style="color: hsl('+cipherList[z].H+' '+cipherList[z].S+'% '+cipherList[z].L+'% / 1);">'+cipherList[z].cipherName+'</span></td>' // color of cipher displayed in the table
+						ms += '<td class="hCV" style="height: '+calcCipherNameHeightPx(cipherList[z].cipherName)+'px;"><span class="hCV2" style="'+curCiphCol+'">'+cipherList[z].cipherName+'</span></td>' // color of cipher displayed in the table
 					} else {
-						ms += '<td class="hC" style="color: hsl('+cipherList[z].H+' '+cipherList[z].S+'% '+cipherList[z].L+'% / 1); max-width: '+calcCipherNameWidthPx(cipherList[z].cipherName)+'px; min-width: '+calcCipherNameWidthPx(cipherList[z].cipherName)+'px;">'+cipherList[z].cipherName+'</td>' // color of cipher displayed in the table
+						ms += '<td class="hC" style="'+curCiphCol+' max-width: '+calcCipherNameWidthPx(cipherList[z].cipherName)+'px; min-width: '+calcCipherNameWidthPx(cipherList[z].cipherName)+'px;">'+cipherList[z].cipherName+'</td>' // color of cipher displayed in the table
 					}
 				}
 			}
@@ -1413,16 +1443,16 @@ function updateHistoryTable(hltBoolArr) {
 				gemVal = curCiph.calcGematria(sHistory[x]) // value only
 				
 				//phrase x, cipher y
-				col = 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1)' // default value color
+				col = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / 1)' : '' // default value color
 
 				// if highlight mode is on
 				if (hltMode) {
 					// if cross cipher match and highlight box doesn't include number
 					if ( optFiltCrossCipherMatch && !highlt_num.includes(gemVal) ) {
-						col = 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+')'
+						col = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+')' : 'hsl(0 0% 70% / '+alphaHlt+')'
 					// hltBoolArr was passed and value inside hltBoolArr is not active (optFiltSameCipherMatch)
 					} else if ( typeof hltBoolArr !== 'undefined' && hltBoolArr[x][ciphCount] == false ) {
-						col = 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+')'
+						col = (optColoredCiphers) ? 'hsl('+curCiph.H+' '+curCiph.S+'% '+curCiph.L+'% / '+alphaHlt+')' : 'hsl(0 0% 70% / '+alphaHlt+')'
 					}
 				}
 				ciphCount++ // next position in hltBoolArr

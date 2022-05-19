@@ -89,7 +89,7 @@ function displayQuickstartGuide() {
 
 	o += '<li><span class="qgBold">"Export Matches (TXT)"</span> - export all available matches from current history table as a text file, current highlighter mode (<span class="qgBold">"Cross Cipher Match"</span> or <span class="qgBold">"Same Cipher Match"</span>) is used during export<br><span class="qgNote">Note: Matches can be imported back into calculator</span></li>'
 
-	o += '<li><span class="qgBold">"Save/Load/Reset"</span> - save, load or reset current calculator and ciphers settings for this browser (localStorage)<br><span class="qgNote">Note: Settings do not persist if you clear cache, use Incognito mode or a different browser on the same device</span></li>'
+	o += '<li><span class="qgBold">"Save/Load/Reset"</span> - save, load or reset current calculator and ciphers settings for this browser (localStorage)<br><span class="qgNote">Note: Use "Reset" twice to clear all localStorage. Saved settings do not persist if you clear cache, use Incognito mode or a different browser on the same device</span></li>'
 
 	o += '<li><span class="qgBold">"Export Settings (JS)"</span> - export current calculator settings and ciphers as a separate file. Ciphers active at the moment of export become the new default ones<br><span class="qgNote">Note: You can edit file manually with a text editor, make sure to keep formatting<br>Any changes made to options or menu settings are saved as well<br>If you want to permanently change settings, you can download an offline version of the calculator from GitHub repository and replace "ciphers.js" file inside "calc" directory<br>Online and offline versions are identical</span></li></ul>'
 

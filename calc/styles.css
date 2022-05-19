@@ -119,7 +119,7 @@ a:active{
 /* ########################################## */
 
 #calcMain {
-	overflow: auto; /* prevent page scroll in Query Table */
+	overflow: overlay; /* prevent page scroll in Query Table */
 	height: 100%;
 }
 
@@ -516,12 +516,16 @@ body {
 		font-size: 110%;
 	}
 }
-.CipherEnd {
+.CipherEnd, .CipherEndRTL {
 	font-size: 90%;
 	padding-top: 2px;
 	padding-bottom: 2px;
 	font-weight: 500;
 	padding-right: 0.5em;
+}
+.CipherEndRTL {
+	padding-right: 0em;
+	padding-left: 0.5em;
 }
 .LetterCounts {
 	color: var(--font-white-2);
